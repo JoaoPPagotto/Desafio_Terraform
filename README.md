@@ -1,4 +1,4 @@
-# Infraestrutura Segura com Terraform e AWS
+# Infraestrutura com Terraform e AWS
 
 Este projeto provisiona uma infraestrutura segura na AWS usando **Terraform**, com foco em alta segurança e automação. A configuração cria uma instância EC2 Debian 12, protege os acessos com grupos de segurança dedicados e instala automaticamente o servidor **Nginx**.
 
