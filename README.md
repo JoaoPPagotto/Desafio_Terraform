@@ -1,67 +1,73 @@
-# README: Infraestrutura AWS Segura com Terraform
+# Infraestrutura Segura com Terraform e AWS
 
-Este projeto define a criação de uma infraestrutura AWS segura utilizando Terraform. A configuração inclui uma instância EC2 com Nginx, protegida por grupos de segurança dedicados para SSH e tráfego web.
+Este projeto provisiona uma infraestrutura segura na AWS usando **Terraform**, com foco em alta segurança e automação. A configuração cria uma instância EC2 Debian 12, protege os acessos com grupos de segurança dedicados e instala automaticamente o servidor **Nginx**.
 
-## 📂 Estrutura da Infraestrutura
+## 🏗️ **Recursos Criados**
 
-### 🔧 **Provider AWS**
-- Configuração do provedor AWS na região `us-east-1`.
+- **VPC** com suporte a DNS e IPs públicos.
+- **Subrede pública** para hospedar a instância EC2.
+- **Internet Gateway** para acesso externo.
+- **Tabela de Rotas** para direcionar tráfego externo à subrede.
+- **Instância EC2** com Debian 12, configurada via **User Data** para instalar o Nginx e ajustar regras de segurança.
+- **Grupos de Segurança (SGs)** segmentados:
+  - **SSH SG:** Acesso restrito à porta 22 para o IP definido (padrão `0.0.0.0/0`, mas pode ser ajustado).
+  - **Web SG:** Permite tráfego HTTP (80) e HTTPS (443) de qualquer IP.
+- **Par de chaves RSA** para acesso seguro via SSH.
 
-### 📊 **Variáveis**
-- `projeto`: Nome do projeto (padrão: `VExpenses`).
-- `candidato`: Nome do candidato (padrão: `SeuNome`).
-- `ssh_allowed_ip`: IP permitido para acesso SSH (padrão: `0.0.0.0/0`).
+## 🔒 **Melhorias de Segurança**
 
-### 🔑 **Chave SSH**
-- `tls_private_key`: Gera uma chave privada RSA de 2048 bits.
-- `aws_key_pair`: Cria um par de chaves AWS com o nome `{projeto}-{candidato}-key`.
+- **Acesso SSH restrito:** Agora o SSH só é permitido para o IP especificado na variável `ssh_allowed_ip`.
+- **Divisão de grupos de segurança:** Isolamento das regras de SSH e Web para reduzir a superfície de ataque.
+- **Login root desabilitado:** Acesso root via SSH é bloqueado para maior segurança.
+- **Firewall UFW ativado:** Regras adicionais no sistema operacional para reforçar a segurança.
 
-### 🔐 **Grupos de Segurança**
-- `ssh_sg`: Permite acesso SSH da origem definida em `ssh_allowed_ip`.
-- `web_sg`: Permite acesso HTTP (porta 80) e HTTPS (porta 443) para qualquer origem.
+## 🚀 **Automação com Nginx**
 
-### 🖥️ **Instância EC2**
-- Cria uma instância Debian 12 `t2.micro` com:
-  - 20 GB de volume EBS (`gp2`).
-  - IP público associado.
-  - Grupos de segurança para SSH e web.
-  - Script de inicialização que:
-    - Instala e configura o Nginx.
-    - Configura o `ufw` para proteger a instância.
-    - Desabilita login root via SSH.
+A instância EC2 é provisionada para:
+- Instalar e iniciar o **Nginx** automaticamente.
+- Configurar o **UFW** para liberar portas 22, 80 e 443.
+- Reiniciar o serviço SSH com a restrição de login root.
 
-### 📤 **Outputs**
-- `ec2_public_ip`: Endereço IP público da instância EC2.
-- `private_key`: Chave privada para acessar a instância EC2.
+Após a criação, o Nginx estará rodando e acessível via IP público da instância.
 
-## 🛠️ **Como Usar**
+## 📂 **Arquivos principais**
+- `main.tf`: Código principal Terraform para provisionar a infraestrutura.
+- `variables.tf`: Definição das variáveis para personalizar a configuração.
+- `outputs.tf`: Saídas com IP público e chave privada.
 
-1. **Inicializar o Terraform:**
+## 📘 **Como usar**
+
+1. **Configurar Terraform:**
 ```bash
 terraform init
 ```
 
-2. **Visualizar o plano de execução:**
+2. **Planejar a infraestrutura:**
 ```bash
-terraform plan
+terraform plan -var="ssh_allowed_ip=<SEU_IP_CIDR>"
 ```
 
-3. **Aplicar a configuração:**
+3. **Aplicar as mudanças:**
 ```bash
-terraform apply
+terraform apply -var="ssh_allowed_ip=<SEU_IP_CIDR>"
 ```
 
-4. **Acessar a instância via SSH:**
+4. **Acessar a instância:**
 ```bash
-ssh -i <arquivo-chave>.pem admin@<ec2_public_ip>
+ssh -i <CAMINHO_PARA_CHAVE> admin@<IP_PUBLICO_EC2>
 ```
 
-5. **Verificar a página padrão do Nginx:**
-```bash
-http://<ec2_public_ip>
+5. **Testar o Nginx:**
+Abra o navegador e acesse:
 ```
+http://<IP_PUBLICO_EC2>
+```
+Deve aparecer a página padrão do Nginx! 🎉
 
----
+## ✅ **Resultados Esperados**
+- A instância EC2 deve estar acessível pelo IP público.
+- O **Nginx** deve estar ativo e respondendo na porta 80.
+- O acesso SSH deve ser possível apenas pelo IP autorizado.
 
-Essa configuração oferece uma instância pronta para hospedar aplicações web com segurança reforçada. Se quiser ajustar ou adicionar recursos, estou aqui para ajudar! 🚀
+Essa configuração oferece um ambiente seguro e pronto para hospedar aplicações web básicas, com práticas recomendadas de segurança e automação. Se quiser aprimorar ainda mais, estou aqui para ajudar! 🚀
 
